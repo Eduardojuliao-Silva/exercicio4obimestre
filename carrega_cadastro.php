@@ -6,7 +6,9 @@
 	
 	$p = $_POST["pg"];
 		
-	$sql = "SELECT * FROM cadastro";
+	$sql = "SELECT id_cadastro, ca.nome as nome, email, sexo, salario, ci.nome as cidade, e.uf as estado FROM cadastro ca
+	INNER JOIN cidade ci ON ca.cod_cidade=ci.id_cidade	
+	INNER JOIN estado e ON ci.cod_estado=e.id_estado";
 	
 	if(isset($_POST["nome_filtro"])){
 		$nome = $_POST["nome_filtro"];

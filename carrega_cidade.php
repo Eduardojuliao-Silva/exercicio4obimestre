@@ -6,7 +6,7 @@
 	
 	$p = $_POST["pg"];
 		
-	$sql = "SELECT * FROM cidade";
+	$sql = "SELECT * FROM cidade INNER JOIN estado ON cidade.cod_estado=estado.id_estado";
 	
 	if(isset($_POST["nome_filtro"])){
 		$nome = $_POST["nome_filtro"];

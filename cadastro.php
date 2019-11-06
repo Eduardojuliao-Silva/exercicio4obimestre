@@ -110,7 +110,7 @@
 				// ALTERAR
 				$(document).on("click",".alteracao",function(){
 					$.ajax({ 
-						url: "altera.php",
+						url: "altera_cadastro.php",
 						type: "post",
 						data: {
 								id: id, 
@@ -138,15 +138,17 @@
 						}
 					});
 				});
+				////////////////////////////////////////////////////////////////////
 				
+				///////////////////////////INLINE NOME /////////////////////////////
 				$(document).on("click",".nome",function(){
 					td = $(this);
 					nome = td.html();
-					td.html("<input type = 'text' id = 'nome' value = '" + nome + "' />");
+					td.html("<input type = 'text' id = 'nome_alterar' value = '" + nome + "' />");
 					td.attr("class","nome_alterar");
 					$("#nome").focus();
 				});
-				
+							
 				$(document).on("blur",".nome_alterar",function(){
 					console.log("teste");
 					console.log("teste");
@@ -169,6 +171,89 @@
 					});
 				});
 				
+				////////////////////////////////////////////////////////////////////
+				
+				///////////////////////////INLINE SEXO /////////////////////////////
+				$(document).on("click",".sexo",function(){
+					td = $(this);
+					sexo = td.html();
+					sexo_input = "<input type = 'radio' class = 'alterar_sexo' name='sexo' value = 'M' /> M";
+					sexo_input += "<input type = 'radio' class = 'alterar_sexo' name='sexo' value = 'F' /> F";
+					td.html(sexo_input);
+					if(sexo=="M"){
+						$(".alterar_sexo[value='M']").prop("checked",true);
+						$(".alterar_sexo[value='F']").prop("checked",false);
+					}
+					else{
+						$(".alterar_sexo[value='M']").prop("checked",true);
+						$(".alterar_sexo[value='F']").prop("checked",false);
+					}
+					td.attr("class","sexo_alterar");
+				});
+				
+				$(document).on("blur",".sexo_alterar",function(){
+					td = $(this);
+					id_linha = $(this).closest("tr").find("button").val();
+					$.ajax({
+						url: "altera_inline.php",
+						type: "post",
+						data: {
+								tabela: 'cadastro', 
+								coluna: 'sexo',
+								valor: $(".alterar_sexo:checked").val(),
+								id: id_linha
+						},
+						success: function(data){
+							sexo = $(".alterar_sexo:checked").val();
+							td.html(sexo);
+							td.attr("class","sexo");
+						}
+					});
+				});
+				//////////////////////////////////////////////////////////////////////
+				
+				///////////////////////////INLINE CIDADE /////////////////////////////
+				$(document).on("click",".cidade",function(){
+					td = $(this);
+					cidade = td.html();
+					
+					select = "<select id='cidade_alterar'>";
+					select += $("select[name='cod_cidade']").html();
+					select += "</select>";
+					
+					td.html(select);
+					valor = $("option:contains('"+cidade+"')").val();
+					$("#cod_cidade").val(valor);
+					$("#cod_cidade").focus();
+					
+					td.attr("class","cidade_alterar");
+				});
+				
+				$(document).on("blur",".cidade_alterar",function(){
+					td = $(this);
+					id_linha = $(this).closest("tr").find("button").val();
+					$.ajax({
+						url: "altera_inline.php",
+						type: "post",
+						data: {
+								tabela: 'cadastro', 
+								coluna: 'cod_cidade',
+								valor: $("#cidade_alterar").val(),
+								id: id_linha
+						},
+						success: function(r){
+							console.log(r);
+							cod_cidade = $("#cidade_alterar").val();
+							cidade_estado = $("#cidade_alterar").find("option[value='" + cod_cidade + "']").html();
+							cidade_estado = cidade_estado.split("/");
+							cidade = cidade_estado[0];
+							estado = cidade_estado[1];
+							td.closest("tr").find(".estado").html(estado);
+							td.html(cidade);
+							td.attr("class","cidade");
+						}
+					});
+				});
 			});
 		
 		</script>
@@ -199,8 +284,14 @@
 			<input type ="number" name="salario" placeholder="Salário..." min="0" step="0.01"/>
 			<br /><br />
 			Cidade: <select name = 'cod_cidade'>
+					<option value="">::selecione a cidade</option>
 						<?php
-							while($linha=mysqli_fetch_assoc($resultado_cidade)){
+						include("conexao.php");
+		
+						$consulta_cidade = "SELECT * FROM cidade";
+						$resultado_cidade = mysqli_query($conexao,$consulta_cidade) or die ("ERRO");
+					
+						while($linha=mysqli_fetch_assoc($resultado_cidade)){
 								echo '<option value = "'. $linha["id_cidade"] .'">'.$linha["nome"] .'</option>';
 							}
 						?>
@@ -234,6 +325,7 @@
 					<th>Sexo</th>
 					<th>Salario</th>
 					<th>Cidade</th>
+					<th>Estado</th>
 					<th>Ação</th>
 				</tr>
 			 </thead>

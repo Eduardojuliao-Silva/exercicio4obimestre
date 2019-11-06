@@ -10,10 +10,49 @@
 		<script>
 			
 			var id = null;
+			var filtro = null;
 			
 			$(function(){
 				
 				paginacao(0);
+				// PAGINAÇÃO
+				function paginacao(p) {
+					$.ajax ({
+						url: "carrega_cidade.php",
+						type: "post",
+						data: {pg: p, nome_filtro: filtro},
+						success: function(matriz){
+							$("#identificador").html("");
+							for(i=0;i<matriz.length;i++){
+								linha = "<tr>";
+								linha += "<td class = 'nome'>" + matriz[i].nome + "</td>";
+								linha += "<td class = 'email'>" + matriz[i].cod_estado + "</td>";
+								linha += "<td><button type = 'button' id = 'nome_alterar' class = 'alterar' value ='" + matriz[i].id_cidade + "'>Alterar</button> | <button type = 'button' class ='remover' value ='" + matriz[i].id_cidade + "'>Remover</button></td>";
+								linha += "</tr>";
+								$("#identificador").append(linha);
+							}
+						}
+					});
+				}
+				
+				// FILTRAR
+				$("#filtrar").click(function(){
+					$.ajax({
+						url:"paginacao_cidade.php",
+						type:"post",
+						data:{
+								nome_filtro: $("input[name='nome_filtro']").val()
+						},
+						success: function(d){
+							console.log(d);
+							filtro = $("input[name='nome_filtro']").val()
+							paginacao(0);
+							
+						}
+					});
+				});
+				
+				
 				
 				$(document).on("click",".alterar",function(){
 					id = $(this).attr("value");
@@ -30,59 +69,48 @@
 					});
 				});
 				
-				function paginacao(p) {
-					$.ajax ({
-						url: "carrega_cidade.php",
-						type: "post",
-						data: {pg: p},
-						success: function(matriz){
-							$("#identificador").html("");
-							for(i=0;i<matriz.length;i++){
-								linha = "<tr>";
-								linha += "<td class = 'nome'>" + matriz[i].nome + "</td>";
-								linha += "<td class = 'cod_estado'>" + matriz[i].cod_estado + "</td>";
-								linha += "<td><button type = 'button' id = 'nome_alterar' class = 'alterar' value ='" + matriz[i].id_cidade + "'>Alterar</button> | <button type = 'button' class ='remover' value ='" + matriz[i].
-								id_cidade + "'>Remover</button></td>";
-								linha += "</tr>";
-								$("#identificador").append(linha);
-							}
-						}
-					});
-				}
-				
-				$(".pg").click(function(){
+				$(document).on("click",".pg", function(){
 					p = $(this).val();
 					p = (p-1)*5;
 					paginacao(p);
 				});
 				
+				// INSERIR
 				$(document).on("click",".cadastrar",function(){
+					alert($("select[name='cod_estado']").val());
 					$.ajax({ 
 						url: "insere_cidade.php",
 						type: "post",
-						data: {nome:$("input[name='nome']").val(), email:$("input[name='email']").val(), sexo:$("input[name='sexo']:checked").val()},
+						data: {
+								nome:$("input[name='nome']").val(), 
+								cod_estado:$("select[name='cod_estado']").val()
+						},
 						success: function(data){
-							if(data==1){
-								$("#resultado").html("Cadastro efetuado!");
+							if(data=='1'){
+								$("#resultado").html("Cadastro de cidade efetuado!");
 							}else {
 								console.log(data);
 							}
 						}
 					});
 				});
+				
+				// ALTERAR
 				$(document).on("click",".alteracao",function(){
 					$.ajax({ 
-						url: "altera.php",
+						url: "altera_cidade.php",
 						type: "post",
-						data: {id: id, nome:$("input[name='nome']").val(), email:$("input[name='email']").val(), sexo:$("input[name='sexo']:checked").val()},
+						data: {
+								id: id, 
+								nome:$("input[name='nome']").val(), 
+								cod_estado:$("select[name='cod_estado']").val()
+						},
 						success: function(data){
 							if(data==1){
 								$("#resultado").html("Alteração efetuada!");
 								paginacao(0);
 								$("input[name='nome']").val("");
-								$("input[name='email']").val("");
-								$("input[name='sexo'][value='M']").attr("checked",false)
-								$("input[name='sexo'][value='F']").attr("checked",false)
+								$("select[name='cod_estado']").val("");
 								$(".alteracao").attr("class","cadastrar");
 								$(".cadastrar").val("Cadastrar");
 							}else {
@@ -95,19 +123,27 @@
 				$(document).on("click",".nome",function(){
 					td = $(this);
 					nome = td.html();
-					td.html("<input type = 'text' name = 'nome' value = '" + nome + "' />");
+					td.html("<input type = 'text' id = 'nome' value = '" + nome + "' />");
 					td.attr("class","nome_alterar");
+					$("#nome").focus();
 				});
 				
 				$(document).on("blur",".nome_alterar",function(){
+					console.log("teste");
+					console.log("teste");
 					td = $(this);
 					id_linha = $(this).closest("tr").find("button").val();
 					$.ajax({
 						url: "altera_inline.php",
 						type: "post",
-						data: {coluna: 'nome', valor: $("#nome_alterar").val(), id: id_linha},
-						success: function(){
-							nome = $("#nome_alterar").val();
+						data: {
+								tabela: 'cidade', 
+								coluna: 'nome',
+								valor: $("#nome").val(),
+								id: id_linha},
+						success: function(data){
+							console.log(data);
+							nome = $("#nome").val();
 							td.html(nome);
 							td.attr("class","nome");
 						}
@@ -128,7 +164,10 @@
 		$resultado_estado = mysqli_query($conexao,$consulta_estado) or die ("ERRO");
 	?>	
 		<h3>Cadastro de Cidades</h3>
-		
+		<?php
+		include("menu.html");
+		?>
+		<br/><br/>
 		<form>
 			
 			Nome: <input type = "text" name = "nome" placeholder = "Nome..." /> <br /><br />
